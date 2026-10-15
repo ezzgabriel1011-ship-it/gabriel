@@ -1,0 +1,1208 @@
+<!DOCTYPE html>
+<!--
+  ============================================================
+  Página de regalo — versión Netflix.
+
+  CÓMO AÑADIR UNA CARTA NUEVA:
+  Busca el array "CARTAS" dentro de <script>. Copia un bloque,
+  pégalo antes del cierre "]" y cambia fecha / título / contenido.
+  El candado, la cuenta atrás y el botón de abrir se generan solos.
+  ============================================================
+-->
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#141414">
+<title>Gabriel &amp; Lissyanet — Netflix</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23E4202C' d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Caveat:wght@500;600;700&family=Playfair+Display:wght@700;800&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#141414;
+    --bg2:#181818;
+    --line:rgba(255,255,255,.14);
+    --red:#E4202C;
+    --green:#46D369;
+    --white:#fff;
+    --muted:#B3B3B3;
+    --paper:#FDF6EC;
+    --ink:#1A1A1A;
+    --max:100%;
+    --ease:cubic-bezier(.16,1,.3,1);
+    --ease-spring:cubic-bezier(.34,1.56,.64,1);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth; background:var(--bg);}
+  html.lock{overflow:hidden;}
+  body{
+    margin:0; background:var(--bg); color:var(--white);
+    font-family:'Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow-x:hidden;
+  }
+  h1,h2,h3,p{margin:0;}
+  button{font-family:inherit;}
+  :focus-visible{outline:2px solid #fff; outline-offset:3px;}
+  .ic{width:1.15em; height:1.15em; display:inline-block; vertical-align:-.2em; flex:none; fill:currentColor;}
+  .wrap{max-width:1100px; margin:0 auto; padding:0 4%;}
+  section{position:relative;}
+
+  /* ---------- aparición al hacer scroll ---------- */
+  .reveal{opacity:0; transform:translateY(22px); transition:opacity .9s var(--ease), transform .9s var(--ease);}
+  .reveal.in-view{opacity:1; transform:translateY(0);}
+
+  /* =========================================================
+     TOP BAR (Netflix)
+     ========================================================= */
+  .topbar{
+    position:fixed; top:0; left:0; right:0; z-index:80;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 4%; gap:14px;
+    background:linear-gradient(180deg, rgba(0,0,0,.75) 0%, rgba(0,0,0,0) 100%);
+    transition:background .3s ease;
+  }
+  .topbar.scrolled{background:#141414;}
+  .topbar-left{display:flex; align-items:center; gap:22px; min-width:0;}
+  .logo{
+    color:var(--red); font-weight:900; letter-spacing:-.03em; font-size:1.6rem; line-height:1;
+    font-family:'Inter',sans-serif; flex:none; text-transform:uppercase;
+    text-shadow:0 2px 6px rgba(0,0,0,.4);
+  }
+  .topnav{display:flex; gap:18px; font-size:.86rem; font-weight:500; color:#e5e5e5;}
+  .topnav a{color:inherit; text-decoration:none; transition:color .2s;}
+  .topnav a:hover{color:#b3b3b3;}
+  .topnav a.active{font-weight:700; color:#fff;}
+  .topbar-right{display:flex; align-items:center; gap:16px; flex:none;}
+  .top-icon{
+    background:transparent; border:0; color:#fff; cursor:pointer; padding:6px; border-radius:50%;
+    display:grid; place-items:center; transition:background .2s;
+  }
+  .top-icon:hover{background:rgba(255,255,255,.12);}
+  .top-icon .ic{width:22px; height:22px;}
+  .avatar{
+    width:32px; height:32px; border-radius:4px; cursor:pointer; flex:none;
+    background:linear-gradient(135deg,#e4202c,#f39a45 60%,#7a5bd0);
+    display:grid; place-items:center; font-weight:900; font-size:.8rem; color:#fff; letter-spacing:.02em;
+  }
+  @media (max-width:640px){ .topnav{display:none;} }
+
+  /* =========================================================
+     PORTADA (hero estilo Netflix)
+     ========================================================= */
+  .hero{position:relative; min-height:92svh; display:flex; flex-direction:column; background:var(--bg);}
+  .hero-art{position:relative; flex:1 1 auto; min-height:56svh; overflow:hidden;}
+  .hero-art::after{
+    content:''; position:absolute; left:0; right:0; bottom:0; height:70%; z-index:3; pointer-events:none;
+    background:linear-gradient(180deg, rgba(20,20,20,0) 0%, rgba(20,20,20,0) 20%, rgba(20,20,20,.7) 65%, #141414 100%);
+  }
+  .hero-art::before{
+    content:''; position:absolute; inset:0; z-index:3; pointer-events:none;
+    background:linear-gradient(90deg, rgba(20,20,20,.85) 0%, rgba(20,20,20,.4) 35%, rgba(20,20,20,0) 60%);
+  }
+  .scene{position:absolute; inset:0; transform:translateY(calc(var(--sy,0) * .22px)); will-change:transform;}
+  .sky{
+    position:absolute; left:0; right:0; top:0; height:68%;
+    background:
+      radial-gradient(70% 45% at 66% 100%, rgba(255,176,80,.95), rgba(255,150,60,0) 72%),
+      linear-gradient(180deg,#1b57b8 0%,#2f7bd6 24%,#7fb0e6 46%,#f1c18a 70%,#f4a34f 88%,#ea8a45 100%);
+  }
+  .sea{
+    position:absolute; left:0; right:0; top:67.5%; bottom:0;
+    background:
+      radial-gradient(50% 70% at 66% 0, rgba(255,160,80,.35), rgba(255,160,80,0) 70%),
+      linear-gradient(180deg,#2c456f,#1c2c4d 45%,#121b30);
+  }
+  .sea::before{
+    content:''; position:absolute; inset:0;
+    background:repeating-linear-gradient(180deg, rgba(255,190,120,.28) 0 1px, transparent 1px 7px);
+    -webkit-mask-image:radial-gradient(45% 100% at 66% 0, #000, transparent 72%);
+            mask-image:radial-gradient(45% 100% at 66% 0, #000, transparent 72%);
+    animation:shimmer 5s ease-in-out infinite alternate;
+  }
+  @keyframes shimmer{from{opacity:.45; transform:translateX(-8px);} to{opacity:1; transform:translateX(8px);}}
+  .cloud{position:absolute; border-radius:50%; filter:blur(7px); animation:cloud 14s ease-in-out infinite alternate;}
+  .cloud.c1{left:-6%; top:55%; width:46%; height:6.5%; background:rgba(88,70,122,.78);}
+  .cloud.c2{right:-8%; top:59%; width:52%; height:5.5%; background:rgba(74,60,112,.8); animation-duration:18s;}
+  .cloud.c3{right:6%; top:14%; width:38%; height:3.5%; background:rgba(255,255,255,.42); animation-duration:22s;}
+  .cloud.c4{left:4%; top:26%; width:30%; height:2.6%; background:rgba(255,255,255,.3); animation-duration:26s;}
+  @keyframes cloud{from{transform:translateX(-14px);} to{transform:translateX(20px);}}
+
+  .couple{
+    position:absolute; left:50%; bottom:10%; height:64%; max-height:380px; width:auto; z-index:2;
+    transform:translateX(-64%); filter:drop-shadow(0 0 8px rgba(255,160,80,.3));
+  }
+  .photo{position:absolute; inset:0; z-index:1; background-size:cover; background-position:center 30%; display:none;}
+  .hero-art.con-foto .photo{display:block;}
+  .hero-art.con-foto .scene{display:none;}
+
+  .hero-hearts{position:absolute; inset:0; z-index:2; pointer-events:none; overflow:hidden;}
+  .rise{
+    position:absolute; bottom:-20px; opacity:0; line-height:1; color:#ffd6dc;
+    filter:drop-shadow(0 0 6px rgba(255,140,120,.55));
+    animation:rise 9s ease-in infinite;
+  }
+  .rise .ic{width:100%; height:100%; display:block;}
+  @keyframes rise{
+    0%{transform:translateY(0) translateX(0) scale(.7); opacity:0;}
+    15%{opacity:.9;}
+    100%{transform:translateY(-280px) translateX(var(--dx,20px)) scale(1.1); opacity:0;}
+  }
+
+  .hero-content{
+    position:relative; z-index:5; width:100%; max-width:1100px; margin:-140px auto 0;
+    padding:0 4% calc(34px + env(safe-area-inset-bottom, 0px));
+  }
+  .hero-in{opacity:0; transform:translateY(14px); animation:heroIn .85s var(--ease) var(--d,0s) forwards;}
+  @keyframes heroIn{to{opacity:1; transform:translateY(0);}}
+
+  .brand{font-size:.72rem; letter-spacing:.2em; font-weight:500; text-transform:uppercase; color:#e5e5e5;}
+  .brand b{font-weight:900; letter-spacing:.14em; color:var(--red);}
+  .title{
+    font-family:'Inter',sans-serif; font-weight:900; letter-spacing:-.02em;
+    font-size:clamp(2.4rem,7vw,4.6rem); line-height:1.02; margin:10px 0 14px;
+    text-wrap:balance; text-shadow:0 2px 26px rgba(0,0,0,.6);
+  }
+  .meta{display:flex; flex-wrap:wrap; align-items:center; gap:6px 12px; font-size:.84rem; font-weight:600;}
+  .match{color:var(--green); font-weight:800;}
+  .badge{
+    border:1px solid rgba(255,255,255,.55); font-size:.66rem; padding:1px 6px; border-radius:2px;
+    font-weight:700; letter-spacing:.06em;
+  }
+  .stars{display:inline-flex; gap:2px; color:var(--red);}
+  .stars .ic{width:15px; height:15px;}
+  .watch{margin:14px 0 8px; font-size:1rem; font-weight:600; color:#e5e5e5;}
+  .synopsis{color:#e6e6e6; font-size:.98rem; line-height:1.55; max-width:540px;}
+
+  .counter{display:flex; gap:8px; margin-top:18px;}
+  .counter .unit{
+    width:68px; padding:8px 0; text-align:center; border:1px solid var(--line); border-radius:6px;
+    background:rgba(255,255,255,.05); display:flex; flex-direction:column; gap:2px; align-items:center;
+  }
+  .counter .num{font-size:1.22rem; font-weight:800; font-variant-numeric:tabular-nums; display:inline-block;}
+  .counter .num.tick{animation:tickPulse .5s var(--ease-spring);}
+  @keyframes tickPulse{0%{transform:scale(1);} 35%{transform:scale(1.22);} 100%{transform:scale(1);}}
+  .counter .lbl{font-size:.6rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--muted);}
+  .meses{margin-top:10px; font-size:.82rem; color:var(--muted); font-weight:600;}
+
+  .actions{display:flex; align-items:center; flex-wrap:wrap; gap:10px; margin-top:20px;}
+  .btn{
+    height:44px; padding:0 20px; border-radius:4px; border:1px solid transparent; cursor:pointer;
+    display:inline-flex; align-items:center; gap:8px; font-weight:700; font-size:.92rem; letter-spacing:.01em;
+    color:#fff; transition:background .2s, transform .15s; -webkit-tap-highlight-color:transparent;
+  }
+  .btn:active{transform:scale(.97);}
+  .btn .ic{width:20px; height:20px;}
+  .btn-play{background:#fff; color:#141414;}
+  .btn-play:hover{background:rgba(255,255,255,.8);}
+  .btn-list{background:rgba(109,109,110,.7);}
+  .btn-list:hover{background:rgba(109,109,110,.55);}
+  .circ{
+    width:44px; height:44px; border-radius:50%; border:1px solid rgba(255,255,255,.55); background:rgba(42,42,42,.6); color:#fff;
+    display:grid; place-items:center; cursor:pointer; padding:0; transition:background .2s, transform .15s;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .circ:hover{background:rgba(60,60,60,.8);}
+  .circ:active{transform:scale(.9);}
+  .circ .ic{width:20px; height:20px;}
+  .cast{margin-top:18px; font-size:.82rem; color:var(--muted); line-height:1.7;}
+  .cast b{color:#d2d2d2; font-weight:600;}
+
+  /* =========================================================
+     FILAS / CARRUSELES (estilo Netflix)
+     ========================================================= */
+  .sec{padding:30px 0 10px; z-index:1; position:relative; margin-top:-10px;}
+  .row-wrap{position:relative;}
+  .sec-head{display:flex; align-items:flex-end; justify-content:space-between; gap:12px; margin:0 0 12px;}
+  .sec-head h2{font-size:1.35rem; font-weight:700; display:flex; align-items:center; gap:10px;}
+  .sec-head h2 .ic{width:22px; height:22px; color:var(--red);}
+  .row-nav{display:flex; gap:6px;}
+  .row-arrow{
+    background:rgba(20,20,20,.6); border:1px solid rgba(255,255,255,.2); color:#fff;
+    width:34px; height:34px; border-radius:50%; cursor:pointer; display:grid; place-items:center;
+    transition:background .2s, transform .15s;
+  }
+  .row-arrow:hover{background:#2a2a2a;}
+  .row-arrow:active{transform:scale(.9);}
+  .row-arrow .ic{width:18px; height:18px; transform:rotate(90deg);}
+  .row-arrow.prev .ic{transform:rotate(-90deg);}
+  .season-chip{
+    display:inline-flex; align-items:center; gap:4px; font-size:.78rem; font-weight:700; white-space:nowrap;
+    background:#2a2a2a; border:1px solid var(--line); border-radius:4px; padding:6px 8px 6px 10px;
+  }
+  .season-chip .ic{width:18px; height:18px;}
+  .sec-sub{color:var(--muted); font-size:.9rem; line-height:1.5; margin:0 0 14px;}
+
+  .card-row{
+    display:flex; gap:10px; overflow-x:auto; scroll-behavior:smooth; padding:6px 2px 18px;
+    scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+  }
+  .card-row::-webkit-scrollbar{display:none;}
+
+  .card-ep{
+    position:relative; flex:0 0 auto; width:260px; scroll-snap-align:start;
+    background:#181818; border:1px solid var(--line); border-radius:6px; overflow:hidden;
+    display:flex; flex-direction:column; cursor:pointer; transition:transform .3s var(--ease), box-shadow .3s;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .card-ep:hover{transform:translateY(-4px) scale(1.02); box-shadow:0 12px 30px rgba(0,0,0,.6); z-index:2;}
+  .card-ep.reveal{transition:opacity .9s var(--ease), transform .9s var(--ease), box-shadow .3s;}
+  .card-thumb{
+    position:relative; width:100%; aspect-ratio:16/9;
+    background:var(--g); display:grid; place-items:center; overflow:hidden;
+  }
+  .card-thumb::after{content:''; position:absolute; inset:0; background:linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,.55));}
+  .card-play{
+    position:relative; z-index:1; width:44px; height:44px; border-radius:50%; border:2px solid rgba(255,255,255,.92);
+    background:rgba(0,0,0,.4); display:grid; place-items:center; transition:transform .25s var(--ease-spring);
+  }
+  .card-play .ic{width:20px; height:20px;}
+  .card-ep:hover .card-play{transform:scale(1.15);}
+  .card-ep.locked .card-thumb{filter:grayscale(1) brightness(.5);}
+  .card-ep.locked{cursor:default;}
+  .card-ep.locked:hover{transform:none; box-shadow:none;}
+  .card-ep.locked:hover .card-play{transform:none;}
+  .card-ep.shake .card-thumb{animation:shake .5s ease;}
+  @keyframes shake{0%,100%{transform:translateX(0);} 20%{transform:translateX(-6px);} 40%{transform:translateX(5px);} 60%{transform:translateX(-4px);} 80%{transform:translateX(3px);}}
+  .card-info{padding:12px 14px 14px; display:flex; flex-direction:column; gap:6px;}
+  .card-num-row{display:flex; align-items:center; justify-content:space-between; gap:8px;}
+  .card-num{font-size:.72rem; font-weight:800; letter-spacing:.14em; color:var(--muted); text-transform:uppercase;}
+  .tag-new{
+    display:inline-block; background:var(--red); color:#fff; font-size:.6rem; font-weight:800; letter-spacing:.08em;
+    padding:2px 6px; border-radius:3px;
+  }
+  .card-title{font-size:.98rem; font-weight:700; line-height:1.3;}
+  .card-ep.locked .card-title{color:#8f8f8f;}
+  .card-sub{font-size:.78rem; color:var(--muted); line-height:1.45;}
+
+  .timeline-note{text-align:center; color:var(--muted); font-size:.86rem; margin:6px 0 22px;}
+  .more-wrap{display:flex; justify-content:flex-start; margin:6px 0 30px; padding:0 4%;}
+
+  /* ---------- archivo (bottom sheet) ---------- */
+  .archive-back{
+    position:fixed; inset:0; z-index:150; background:rgba(0,0,0,.8); backdrop-filter:blur(4px);
+    display:flex; align-items:flex-end; justify-content:center;
+    opacity:0; pointer-events:none; transition:opacity .3s var(--ease);
+  }
+  .archive-back.show{opacity:1; pointer-events:auto;}
+  .archive-panel{
+    width:100%; max-width:720px; max-height:80vh; background:#181818; border-top:1px solid var(--line);
+    border-radius:16px 16px 0 0; padding:18px 4px calc(10px + env(safe-area-inset-bottom, 0px));
+    display:flex; flex-direction:column; transform:translateY(100%); transition:transform .4s var(--ease-spring);
+  }
+  .archive-back.show .archive-panel{transform:translateY(0);}
+  .archive-head{display:flex; align-items:center; justify-content:space-between; padding:4px 18px 14px; border-bottom:1px solid var(--line);}
+  .archive-head h3{font-size:1.15rem; font-weight:700;}
+  .round-btn{
+    width:36px; height:36px; border-radius:50%; border:0; cursor:pointer; padding:0; display:grid; place-items:center;
+    transition:transform .1s; -webkit-tap-highlight-color:transparent;
+  }
+  .round-btn:active{transform:scale(.9);}
+  .round-btn .ic{width:18px; height:18px;}
+  .archive-close{background:#333; color:#fff;}
+  .archive-list{overflow-y:auto; padding:14px 12px 18px;}
+  .archive-row{
+    appearance:none; -webkit-appearance:none; width:100%; text-align:left; font:inherit; color:inherit;
+    display:flex; flex-direction:column; gap:4px; padding:14px; border-radius:8px; cursor:pointer;
+    background:#232323; border:1px solid transparent; margin-bottom:10px; transition:background .15s, border-color .15s;
+  }
+  .archive-row:hover{background:#2d2d2d; border-color:var(--line);}
+  .ar-date{font-size:.74rem; font-weight:700; color:var(--muted);}
+  .ar-title{font-size:1rem; font-weight:700;}
+  .archive-empty{text-align:center; color:var(--muted); font-weight:600; font-size:.95rem; padding:30px 20px;}
+
+  /* =========================================================
+     MODAL DE CARTA
+     ========================================================= */
+  .modal-back{
+    position:fixed; inset:0; background:rgba(0,0,0,.82); backdrop-filter:blur(6px);
+    display:flex; align-items:center; justify-content:center;
+    padding:calc(24px + env(safe-area-inset-top, 0px)) 20px calc(24px + env(safe-area-inset-bottom, 0px));
+    z-index:200; opacity:0; pointer-events:none; transition:opacity .35s var(--ease); perspective:1200px;
+  }
+  .modal-back.show{opacity:1; pointer-events:auto;}
+  .letter-wrap{
+    position:relative; width:100%; max-width:460px;
+    transform:translateY(40px) rotateX(-14deg) scale(.94); transform-origin:50% 100%;
+    transition:transform .55s var(--ease-spring);
+  }
+  .modal-back.show .letter-wrap{transform:none;}
+  .letter{
+    position:relative; background:var(--paper); color:var(--ink); border-radius:6px;
+    max-height:calc(100svh - 190px); overflow-y:auto; padding:38px 26px 28px;
+    box-shadow:0 24px 70px rgba(0,0,0,.6); overscroll-behavior:contain;
+  }
+  .letter::before{content:''; position:absolute; left:0; right:0; top:0; height:6px; background:linear-gradient(90deg,#f39a45,#e4202c,#7a5bd0);}
+  .letter-date{font-size:.76rem; font-weight:800; letter-spacing:.04em; color:#B3121F;}
+  .letter h3{font-family:'Playfair Display',serif; margin-top:10px; font-size:1.55rem; font-weight:800; line-height:1.2; color:var(--ink);}
+  .letter-body{
+    font-family:'Caveat',cursive; font-size:1.5rem; line-height:2rem; margin-top:18px;
+    white-space:pre-wrap; overflow-wrap:anywhere; font-weight:600;
+    background-image:repeating-linear-gradient(to bottom, transparent 0, transparent calc(2rem - 2px), rgba(110,135,185,.35) calc(2rem - 2px), rgba(110,135,185,.35) 2rem);
+    background-position:0 .15rem;
+  }
+  .letter-close{position:absolute; top:-16px; right:-8px; z-index:6; background:#fff; color:#141414; box-shadow:0 4px 14px rgba(0,0,0,.4);}
+  .letter-nav{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:18px;}
+  .letter-nav[hidden]{display:none;}
+  .nav-btn{
+    background:transparent; border:1px solid rgba(255,255,255,.6); border-radius:4px; padding:9px 14px;
+    font-weight:700; font-size:.84rem; color:#fff; cursor:pointer; transition:background .2s;
+  }
+  .nav-btn:hover:not(:disabled){background:rgba(255,255,255,.14);}
+  .nav-btn:disabled{opacity:.35; cursor:default;}
+  .nav-count{font-size:.82rem; font-weight:600; color:var(--muted);}
+
+  /* =========================================================
+     CIERRE: próximamente + tarjeta que se voltea
+     ========================================================= */
+  .closing{padding:60px 4% 20px; text-align:center; max-width:720px; margin:0 auto; z-index:1;}
+  .closing .star-ic{
+    display:block; width:46px; height:46px; margin:0 auto 14px; color:var(--red); fill:currentColor;
+    filter:drop-shadow(0 6px 18px rgba(228,32,44,.55)); animation:beat 1.8s ease-in-out infinite;
+  }
+  @keyframes beat{0%,100%{transform:scale(1);} 14%{transform:scale(1.12);} 28%{transform:scale(1);} 42%{transform:scale(1.07);} 56%{transform:scale(1);}}
+  .closing h2{font-family:'Inter',sans-serif; font-weight:800; font-size:clamp(1.8rem,5vw,2.6rem); line-height:1.15; text-shadow:0 2px 20px rgba(0,0,0,.5);}
+  .soon{margin:36px 0 12px; font-size:.7rem; font-weight:800; letter-spacing:.22em; color:var(--muted);}
+
+  .flip{position:relative; max-width:340px; margin:0 auto; perspective:1400px;}
+  .flip.flipping{animation:lift .95s ease;}
+  @keyframes lift{0%{transform:translateY(0) scale(1);} 40%{transform:translateY(-14px) scale(1.04);} 100%{transform:translateY(0) scale(1);}}
+  .flip-inner{display:grid; transform-style:preserve-3d; transition:transform .95s cubic-bezier(.34,1.25,.5,1);}
+  .flip.is-flipped .flip-inner{transform:rotateY(180deg);}
+  .flip-face{grid-area:1 / 1; -webkit-backface-visibility:hidden; backface-visibility:hidden;}
+  .flip-back{transform:rotateY(180deg); display:flex; flex-direction:column; align-items:center; justify-content:center;}
+
+  .special-note{
+    position:relative; color:#fff; text-align:center; padding:22px 18px; border-radius:10px;
+    background:radial-gradient(120% 90% at 0 0, rgba(228,32,44,.3), rgba(228,32,44,0) 60%), #1d1d1d;
+    border:1px solid rgba(255,255,255,.16); box-shadow:0 18px 40px rgba(0,0,0,.55);
+  }
+  .flip-front{
+    appearance:none; -webkit-appearance:none; font:inherit; cursor:pointer; width:100%;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; -webkit-tap-highlight-color:transparent;
+  }
+  .sn-title{display:inline-flex; align-items:center; gap:6px; color:#ff5a64; font-weight:800; font-size:.78rem; letter-spacing:.14em;}
+  .sn-text{display:block; font-size:.92rem; font-weight:600; line-height:1.5; margin-top:8px; color:#ececec;}
+  .sn-count{display:block; margin-top:10px; font-size:.8rem; font-weight:600; color:var(--muted);}
+  .sn-count b{color:#fff; font-size:1.35rem; font-weight:800; font-variant-numeric:tabular-nums;}
+  .flip-hint{display:inline-flex; align-items:center; gap:6px; margin-top:10px; font-family:'Caveat',cursive; font-weight:700; font-size:1.25rem; color:var(--muted);}
+  .flip-hint .ic{animation:nudge 2.2s ease-in-out infinite;}
+  @keyframes nudge{0%,100%{transform:rotate(0);} 50%{transform:rotate(28deg);}}
+  .back-title{color:#ff5a64; font-weight:800; font-size:.85rem; letter-spacing:.16em;}
+  .back-msg{margin-top:10px; max-width:260px; font-size:1rem; font-weight:600; line-height:1.5;}
+  .flip-return{
+    position:absolute; top:10px; right:10px; width:32px; height:32px; background:#fff; color:#141414;
+    box-shadow:0 3px 10px rgba(0,0,0,.4);
+  }
+  .flip-return .ic{width:17px; height:17px;}
+
+  footer{text-align:center; padding:28px 24px calc(44px + env(safe-area-inset-bottom, 0px)); color:var(--muted); font-weight:600; font-size:.84rem; position:relative; z-index:1;}
+  footer .ic{color:var(--red);}
+
+  /* ---------- aviso + efectos ---------- */
+  .toast{
+    position:fixed; left:50%; bottom:calc(28px + env(safe-area-inset-bottom, 0px)); z-index:400;
+    max-width:min(92vw,380px); background:#fff; color:#141414; border-radius:6px; padding:12px 18px;
+    font-weight:700; font-size:.88rem; text-align:center; line-height:1.4; box-shadow:0 10px 30px rgba(0,0,0,.5);
+    transform:translate(-50%,24px); opacity:0; pointer-events:none;
+    transition:transform .35s var(--ease-spring), opacity .25s ease;
+  }
+  .toast.show{transform:translate(-50%,0); opacity:1;}
+  .toast .ic{margin-right:6px; color:var(--red);}
+  .burst{position:fixed; z-index:300; pointer-events:none; width:22px; height:22px; line-height:1;}
+  .burst .ic{width:100%; height:100%; display:block;}
+
+  @media (max-width:640px){
+    .hero-content{margin-top:-110px;}
+    .card-ep{width:220px;}
+    .btn{padding:0 14px; font-size:.86rem;}
+    .counter .unit{width:60px;}
+  }
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto;}
+    .cloud,.sea::before,.rise,.closing .star-ic,.flip-hint .ic,.card-ep.shake .card-thumb{animation:none !important;}
+    .reveal{transition:none !important;}
+    .hero-in{animation:none !important; opacity:1 !important; transform:none !important;}
+    .counter .num.tick,.flip.flipping{animation:none !important;}
+    .archive-panel,.letter-wrap,.toast,.flip-inner{transition:none !important;}
+    .scene{transform:none !important;}
+  }
+</style>
+</head>
+<body>
+
+<!-- Iconos SVG -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></symbol>
+    <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></symbol>
+    <symbol id="i-sparkle" viewBox="0 0 32 32"><path d="M16 2C17 11 21 15 30 16 21 17 17 21 16 30 15 21 11 17 2 16 11 15 15 11 16 2Z"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zM9 8V6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9z"/></symbol>
+    <symbol id="i-mail" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></symbol>
+    <symbol id="i-chevron" viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></symbol>
+    <symbol id="i-flip" viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></symbol>
+    <symbol id="i-smile" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="8.8" cy="10" r="1.3"/><circle cx="15.2" cy="10" r="1.3"/><path d="M7.5 14c1 2.4 2.7 3.4 4.5 3.4s3.5-1 4.5-3.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="i-thumb-up" viewBox="0 0 24 24"><path d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></symbol>
+    <symbol id="i-thumb-down" viewBox="0 0 24 24"><path transform="rotate(180 12 12)" d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.7.7l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0A4.5 4.5 0 1 1 14 9.5 4.5 4.5 0 0 1 9.5 14z"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></symbol>
+    <symbol id="i-back" viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></symbol>
+  </defs>
+</svg>
+
+<!-- ===================== TOP BAR ===================== -->
+<header class="topbar" id="topbar">
+  <div class="topbar-left">
+    <span class="logo">Gabriel</span>
+    <nav class="topnav">
+      <a href="#inicio" class="active">Inicio</a>
+      <a href="#cartas">Cartas</a>
+      <a href="#cartas">Nuevo y popular</a>
+      <a href="#archivo-btn">Mi lista</a>
+    </nav>
+  </div>
+  <div class="topbar-right">
+    <button class="top-icon" id="top-search" type="button" aria-label="Buscar"><svg class="ic"><use href="#i-search"/></svg></button>
+    <button class="top-icon" id="top-bell" type="button" aria-label="Notificaciones"><svg class="ic"><use href="#i-bell"/></svg></button>
+    <div class="avatar" id="top-avatar" role="button" tabindex="0" aria-label="Perfil">G&amp;L</div>
+  </div>
+</header>
+
+<!-- ===================== PORTADA ===================== -->
+<section class="hero" id="inicio">
+  <div class="hero-art" id="hero-art">
+    <div class="scene" id="scene" aria-hidden="true">
+      <div class="sky"></div>
+      <div class="cloud c3"></div><div class="cloud c4"></div>
+      <div class="cloud c1"></div><div class="cloud c2"></div>
+      <div class="sea"></div>
+      <svg class="couple" viewBox="0 0 300 372">
+        <g fill="#0e1530">
+          <path d="M73 150L96 150 93 366 77 366Z"/><path d="M96 150L119 150 115 366 99 366Z"/>
+        </g>
+        <g fill="#1d2b58">
+          <path d="M70 62Q95 52 120 62L124 154 66 154Z"/>
+          <path d="M66 64L75 66 71 142 60 140Z"/>
+          <path d="M118 62L128 68 178 136 170 144Z"/>
+        </g>
+        <ellipse cx="95" cy="35" rx="15" ry="17" fill="#0c1226"/>
+        <rect x="90" y="48" width="10" height="10" fill="#0c1226"/>
+        <path d="M200 31C198 13 226 10 229 29 233 53 250 82 263 120 246 110 236 94 226 72 216 64 207 57 200 31Z" fill="#0c1226"/>
+        <ellipse cx="212" cy="37" rx="13" ry="16" fill="#0c1226"/>
+        <rect x="207" y="50" width="10" height="10" fill="#0c1226"/>
+        <g fill="#2f3f70">
+          <path d="M195 64Q212 56 230 64L241 112 248 252 178 252 190 118Z"/>
+          <path d="M197 66L205 72 174 144 164 136Z"/>
+          <path d="M231 66L242 72 241 152 230 150Z"/>
+        </g>
+        <g fill="#0e1530"><path d="M194 252L207 252 205 366 197 366Z"/><path d="M216 252L229 252 227 366 219 366Z"/></g>
+        <circle cx="172" cy="139" r="6.5" fill="#0c1226"/>
+      </svg>
+    </div>
+    <div class="photo" id="hero-photo"></div>
+    <div class="hero-hearts" id="hero-hearts" aria-hidden="true"></div>
+  </div>
+
+  <div class="hero-content">
+    <div class="brand hero-in" style="--d:.05s"><b>Gabriel</b> original</div>
+    <h1 class="title hero-in" style="--d:.15s">Gabriel &amp; Lissyanet</h1>
+    <div class="meta hero-in" style="--d:.25s">
+      <span class="match">100% Match</span>
+      <span>Desde 2024</span>
+      <span class="badge">+18</span>
+      <span>Temporada <span class="season-n">1</span></span>
+      <span class="stars" aria-label="5 estrellas"><svg class="ic"><use href="#i-star"/></svg><svg class="ic"><use href="#i-star"/></svg><svg class="ic"><use href="#i-star"/></svg><svg class="ic"><use href="#i-star"/></svg><svg class="ic"><use href="#i-star"/></svg></span>
+    </div>
+    <div class="watch hero-in" style="--d:.33s">Mira nuestra temporada <span class="season-n">1</span> ahora</div>
+    <p class="synopsis hero-in" style="--d:.4s">Aquí guardo los días que llevamos juntos contados uno a uno, y algunas cartas que te iré dejando por el camino.</p>
+
+    <div class="counter hero-in" style="--d:.47s" id="counter">
+      <div class="unit"><span class="num" id="c-days">0</span><span class="lbl">días</span></div>
+      <div class="unit"><span class="num" id="c-hours">0</span><span class="lbl">horas</span></div>
+      <div class="unit"><span class="num" id="c-mins">0</span><span class="lbl">min</span></div>
+      <div class="unit"><span class="num" id="c-secs">0</span><span class="lbl">seg</span></div>
+    </div>
+    <div class="meses hero-in" style="--d:.5s" id="meses"></div>
+
+    <div class="actions hero-in" style="--d:.56s">
+      <button class="btn btn-play" id="btn-play" type="button"><svg class="ic"><use href="#i-play"/></svg> Reproducir</button>
+      <button class="btn btn-list" id="btn-list" type="button"><svg class="ic"><use href="#i-plus"/></svg> Mi lista</button>
+      <button class="circ" id="btn-up" type="button" aria-label="Me gusta"><svg class="ic"><use href="#i-thumb-up"/></svg></button>
+      <button class="circ" id="btn-down" type="button" aria-label="No me gusta"><svg class="ic"><use href="#i-thumb-down"/></svg></button>
+    </div>
+
+    <div class="cast hero-in" style="--d:.64s">
+      <div><b>Elenco:</b> Gabriel, Lissyanet</div>
+      <div><b>Género:</b> Romántico</div>
+      <div><b>Desde el 10 de noviembre de 2024</b> hasta el infinito <svg class="ic"><use href="#i-sparkle"/></svg></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== CARTAS (episodios, carrusel Netflix) ===================== -->
+<section class="sec" id="cartas">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <h2><svg class="ic"><use href="#i-mail"/></svg> Cartas para ti</h2>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span class="season-chip">Temporada <span class="season-n">1</span> <svg class="ic"><use href="#i-chevron"/></svg></span>
+        <div class="row-nav">
+          <button class="row-arrow prev" type="button" aria-label="Anterior" data-row="timeline"><svg class="ic"><use href="#i-chevron"/></svg></button>
+          <button class="row-arrow next" type="button" aria-label="Siguiente" data-row="timeline"><svg class="ic"><use href="#i-chevron"/></svg></button>
+        </div>
+      </div>
+    </div>
+    <p class="sec-sub reveal">Algunas ya se pueden abrir. Otras tendrán que esperar un poco más.</p>
+    <div class="row-wrap">
+      <div class="card-row" id="timeline"></div>
+    </div>
+    <div class="timeline-note">El día 10 de cada mes se añade una carta nueva.</div>
+  </div>
+  <div class="more-wrap reveal">
+    <button class="btn btn-list" id="archive-open" type="button"><svg class="ic"><use href="#i-plus"/></svg> Ver todas las cartas <span id="archive-count"></span></button>
+  </div>
+</section>
+
+<!-- ===================== CIERRE ===================== -->
+<section class="closing reveal">
+  <svg class="star-ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-heart"/></svg>
+  <h2>Gracias por ser mi<br>persona favorita.</h2>
+
+  <div class="soon">PRÓXIMAMENTE</div>
+  <div class="flip" id="flip">
+    <div class="flip-inner">
+      <button class="flip-face flip-front special-note" id="flip-front" type="button" aria-expanded="false" aria-controls="flip-back">
+        <span class="sn-title"><svg class="ic"><use href="#i-sparkle"/></svg> GUARDA ESTA FECHA</span>
+        <span class="sn-text">El 10 de noviembre de 2026 esta página va a cambiar.</span>
+        <span class="sn-count" id="sn-count">Faltan <b id="special-days">—</b> días. Ya casii!! <svg class="ic"><use href="#i-smile"/></svg></span>
+        <span class="flip-hint"><svg class="ic"><use href="#i-flip"/></svg> dale la vuelta</span>
+      </button>
+      <div class="flip-face flip-back special-note" id="flip-back" aria-hidden="true" inert>
+        <button class="round-btn flip-return" id="flip-return" type="button" aria-label="Dar la vuelta"><svg class="ic"><use href="#i-flip"/></svg></button>
+        <div class="back-title">PISTA:</div>
+        <p class="back-msg">Tu regalo no es un objeto jeje (bueno una parte de él)</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>Hecho con cariño, para ti <svg class="ic"><use href="#i-heart"/></svg></footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- ===================== MODAL CARTA ===================== -->
+<div class="modal-back" id="modal">
+  <div class="letter-wrap" id="letter-wrap" role="dialog" aria-modal="true" aria-labelledby="letter-title">
+    <button class="round-btn letter-close" id="letter-close" type="button" aria-label="Cerrar"><svg class="ic"><use href="#i-close"/></svg></button>
+    <article class="letter" id="letter-scroll">
+      <div class="letter-date" id="letter-date"></div>
+      <h3 id="letter-title"></h3>
+      <div class="letter-body" id="letter-body"></div>
+    </article>
+    <div class="letter-nav" id="letter-nav" hidden>
+      <button class="nav-btn" id="letter-prev" type="button">‹ Anterior</button>
+      <span class="nav-count" id="letter-count"></span>
+      <button class="nav-btn" id="letter-next" type="button">Siguiente ›</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== ARCHIVO DE CARTAS ===================== -->
+<div class="archive-back" id="archive">
+  <div class="archive-panel" role="dialog" aria-modal="true" aria-label="Todas las cartas">
+    <div class="archive-head">
+      <h3>Todas tus cartas</h3>
+      <button class="round-btn archive-close" id="archive-close" type="button" aria-label="Cerrar"><svg class="ic"><use href="#i-close"/></svg></button>
+    </div>
+    <div class="archive-list" id="archive-list"></div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   ✉️  CÓMO AÑADIR UNA CARTA NUEVA
+   Copia un bloque de los de abajo, pégalo antes del "]" y cambia:
+   - fecha:     "AAAA-MM-DD"  → día en que se desbloquea
+   - titulo:    el título que quieras
+   - contenido: el texto de la carta (puedes usar varias líneas)
+   No hay que tocar nada más. El candado y la cuenta atrás se
+   generan solos según la fecha.
+   ============================================================ */
+/* ===== CARTAS_START ===== */
+const CARTAS = [
+  {
+    fecha: "2026-07-10",
+    titulo: "Un pequeño rincón para ti",
+    contenido: `Querida Lissyanet,
+Si estás leyendo esto es porque por fin te enseñé este rincón que llevaba tiempo preparando para ti. No es gran cosa a primera vista pero confío en que te va a gustar. Esta pagina es un recordatorio más del amor que siento por vos, la verdad quería darte un regalo por tu “cumpleaños” pero no tenia presupuesto asi que se me ocurrio la idea de crear un pequeño lugar donde siempre que quieras puedes leer las cartas que te escribo y… ya se que no es un bolso ni un rimel, pero igual es con mucho amor. Como ya pudiste ver aun hay cartas que no se han desbloqueado asi que toca esperar. Realmente espero que esto te guste. Y una vez más.
+                         
+                                     Con mucho amor, 
+                                                      Gabriel.`
+  },
+  {
+    fecha: "2026-07-19",
+    titulo: "Para sacarte una sonrisa",
+    contenido: `Querida Lissyanet,
+Si ves esta carta significa que realmente te gustó este pequeño espacio que creé para vos. la verdad, a veces no sé muy bien qué ponerte en una carta sin que suene repetitivo, pero realmente me gusta escribirte, tan solo por el simple hecho de ver una sonrisa en tu hermoso rostro mientras la leés. Quiero aprovechar este espacio para poder expresar mis sentimientos hacia vos de una manera más sencilla. No importa si lo leés hoy, dentro de una semana o incluso dentro de varios meses. Mi intención es que cada vez que abras esta página puedas sentir un pedacito de todo el cariño con el que la hice. Gracias por tomarte el tiempo de leer esto y por ser la persona que me inspira a hacer todas estas pequeñas locuras. Ojalá esta carta consiga sacarte una sonrisa, aunque sea una chiquita, porque con eso ya sentiría que valió completamente la pena escribirla.
+                            Con todo mi amor,
+                                               Gabriel.`
+  },
+  {
+    fecha: "2026-07-31",
+    titulo: "Necesitaba desahogarme",
+    contenido: `Querida Lissyanet,
+
+Hola, no sé si llegues a ver esto. La verdad, esta carta no es de amor, pero ya sabes que una de las formas más simples que tengo para expresar mis sentimientos es escribirte. Estos últimos días han sido muy difíciles para mí, han pasado demasiadas cosas y siento que yo estoy en el medio de todo; siento que yo soy lo que estorba. Tal vez no debería tomarme esto de esta manera, pero por mucho que lo intente, se me hace muy difícil. Ciertamente creo que la forma en la que me siento se debe a que soy muy sensible. Esto no debería afectarme tanto, pero ya sabes que a veces convierto un pequeño grano de arena en un enorme desierto. Yo sé que tú no tienes nada que ver con esto y tampoco quiero que te sientas mal ni mucho menos. A veces me pongo a pensar por qué me pasan este tipo de cosas a mí; o sea, ya sé que no he sido un santo, pero siempre intento que todo salga bien aunque no me beneficie, y a cambio solo me pasan cosas malas. La verdad, lo que más me molesta de todo es que Tulu se haya perdido. Él es muy importante para mí y le tengo mucho cariño, y si no aparece nunca más, no sé cómo podré acostumbrarme. Tal vez solamente debería intentar cambiar mi forma de llevar las cosas y no ser tan sensible… es una tontería, eso ya me lo he dicho mil veces y no lo he podido cambiar. Pero bueno, solamente se puede hacer una cosa y es seguir adelante, pase lo que pase.
+
+                                         Con amor, 
+                                                    Gabriel.`
+  },
+  {
+    fecha: "2026-09-10",
+    titulo: "Mi Niña💫",
+    contenido: `Mi princesa, 
+
+Esta carta la escribo mientras pienso en lo mucho que me gustaría que estuvieras aquí. Todo este tiempo ha sido difícil no poder pasar las tardes y noches con vos como lo hacíamos antes, pero no quiero convertir esta carta en algo triste por eso te quiero recordar lo bonito que se siente pasar el tiempo contigo, además de que eres la única que me entiende y me soporta jeje pero bueno solo t digo que gracias y ojalá hayan muchos mas momento bonitos junto a ti <333. 
+
+Con amor,
+Gabriel.`
+  },
+  {
+    fecha: "2026-09-27",
+    titulo: "De regreso",
+    contenido: `Princesa, 
+
+Esta carta es solo para decirte que ya puedo seguir actualizando tu pagina y recordarte que si te pasas por aquí más seguido probablemente encuentres cosas nuevas. También voy a aprovechar para recordarte lo mucho que me gustas y que te amo mucho mucho mi niña bonita💕. 
+
+Con amor, 
+Gabriel.`
+  },
+  /* ==== Carta mensual movida aquí: 10 de octubre de 2026 ==== */
+  {
+    fecha: "2026-10-10",
+    titulo: "23 meses <3",
+    contenido: `Mi amor ya cumplimos 23 meses y solo faltan 28 dias para cumplir dos años. Despues de tanto tiempo me es imposible imaginar un futuro sin vos, es por eso que quiero que duremos mucho mas. Esta carta no salió el día 10 por razones obvias pero bueno como dicen por ahí "mejor tarde que nunca" xd. Quisiera también recordarte que te amo muchito y que eres el amor de mai laif <3.
+
+Con amor, 
+Gabriel.`
+  }
+];
+/* ===== CARTAS_END ===== */
+
+/* ============================================================
+   ✉️  CARTA AUTOMÁTICA DE CADA MES
+   Se genera sola el día "dia" de cada mes, empezando en "desde".
+   Cambia "titulo" y "contenido" cuando quieras — se actualiza
+   en todas las cartas futuras que aún no se hayan generado.
+   Pon "activa: false" si quieres desactivarla del todo.
+   NOTA: la carta del 10 de octubre de 2026 ya está puesta arriba
+   a mano, así que aquí empieza a partir del 10 de noviembre.
+   ============================================================ */
+/* ===== MONTHLY_START ===== */
+const CARTA_MENSUAL = {
+  activa: true,
+  dia: 10,
+  desde: "2026-11-10",
+  titulo: "24 meses <3",
+  contenido: `Mi amor, ya 24 meses juntos. Dos años completos de nosotros, de reírnos, de pelear y volver, de elegirnos una y otra vez. No sé qué me depara la vida, pero sí sé que quiero que estés vos en ella. Gracias por tanto, mi niña.
+
+Con amor, 
+Gabriel.`
+};
+/* ===== MONTHLY_END ===== */
+
+/* ============================================================
+   A partir de aquí: lógica de la página (no hace falta tocar)
+   ============================================================ */
+
+const FOTO_PORTADA = "";
+
+const START_DATE   = parseLocalDate("2024-11-10");
+const SPECIAL_DATE = parseLocalDate("2026-11-10");
+const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const $ = (id) => document.getElementById(id);
+const icon = (n) => `<svg class="ic" aria-hidden="true"><use href="#i-${n}"/></svg>`;
+
+function parseLocalDate(str){
+  const [y,m,d] = str.split('-').map(Number);
+  return new Date(y, m-1, d, 0, 0, 0);
+}
+function fmtFechaLarga(date){
+  return date.toLocaleDateString('es-ES', {day:'numeric', month:'long', year:'numeric'});
+}
+function fmtFechaCorta(date){
+  return date.toLocaleDateString('es-ES', {day:'numeric', month:'short', year:'numeric'});
+}
+function pad(n){ return String(n).padStart(2, '0'); }
+function dayKey(d){ return d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate(); }
+
+// genera una carta virtual para el día X de cada mes
+function generarCartasMensuales(){
+  if(!CARTA_MENSUAL.activa) return [];
+  const [y0, m0] = CARTA_MENSUAL.desde.split('-').map(Number);
+  const generadas = [];
+  const horizonte = new Date();
+  horizonte.setFullYear(horizonte.getFullYear() + 3);
+  let y = y0, m = m0;
+  while(true){
+    if(m > 12){ m = 1; y++; }
+    const fechaCarta = new Date(y, m - 1, CARTA_MENSUAL.dia);
+    if(fechaCarta > horizonte) break;
+    generadas.push({
+      fecha: `${y}-${pad(m)}-${pad(CARTA_MENSUAL.dia)}`,
+      titulo: CARTA_MENSUAL.titulo,
+      contenido: CARTA_MENSUAL.contenido,
+    });
+    m++;
+  }
+  return generadas;
+}
+
+// combina las cartas escritas a mano con las mensuales automáticas
+function todasLasCartas(){
+  const fechasManual = new Set(CARTAS.map(c => c.fecha));
+  const mensuales = generarCartasMensuales().filter(c => !fechasManual.has(c.fecha));
+  return [...CARTAS, ...mensuales];
+}
+
+/* ---------- portada: foto opcional, parallax y corazones ---------- */
+if(FOTO_PORTADA){
+  $('hero-art').classList.add('con-foto');
+  $('hero-photo').style.backgroundImage = `url("${FOTO_PORTADA}")`;
+}
+(function(){
+  if(REDUCED_MOTION) return;
+  const scene = $('scene');
+  let ticking = false;
+  window.addEventListener('scroll', () => {
+    if(ticking || window.scrollY > window.innerHeight * 1.3) return;
+    ticking = true;
+    requestAnimationFrame(() => {
+      scene.style.setProperty('--sy', window.scrollY);
+      ticking = false;
+    });
+  }, {passive:true});
+})();
+(function buildHearts(){
+  const box = $('hero-hearts');
+  const n = window.innerWidth < 600 ? 9 : 14;
+  for(let i = 0; i < n; i++){
+    const s = document.createElement('span');
+    s.className = 'rise';
+    s.innerHTML = icon('heart');
+    const size = 10 + Math.random() * 10;
+    s.style.width = s.style.height = size + 'px';
+    s.style.left = (4 + Math.random() * 92) + '%';
+    s.style.setProperty('--dx', ((Math.random() - .5) * 60) + 'px');
+    if(REDUCED_MOTION){
+      s.style.opacity = '.5'; s.style.bottom = (10 + Math.random() * 60) + '%'; s.style.animation = 'none';
+    } else {
+      s.style.animationDuration = (7 + Math.random() * 6) + 's';
+      s.style.animationDelay = (Math.random() * 8).toFixed(1) + 's';
+    }
+    box.appendChild(s);
+  }
+})();
+
+/* ---------- efectos: explosión y lluvia ---------- */
+const BURST_ICONS  = ['heart','heart','star','sparkle'];
+const BURST_COLORS = ['#E4202C','#ff7a85','#FFD2A0','#FFFFFF','#F39A45'];
+const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+function makeBit(){
+  const s = document.createElement('span');
+  s.className = 'burst';
+  s.innerHTML = icon(pick(BURST_ICONS));
+  s.style.color = pick(BURST_COLORS);
+  return s;
+}
+function burst(x, y, n = 14){
+  if(REDUCED_MOTION) return;
+  for(let i = 0; i < n; i++){
+    const s = makeBit();
+    s.style.left = x + 'px';
+    s.style.top = y + 'px';
+    const a = Math.random() * Math.PI * 2;
+    const r = 60 + Math.random() * 110;
+    const dx = Math.cos(a) * r, dy = Math.sin(a) * r + 40;
+    const rot = (Math.random() - .5) * 120;
+    const anim = s.animate([
+      {transform:'translate(-50%,-50%) scale(.4)', opacity:1},
+      {transform:`translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(1.2) rotate(${rot}deg)`, opacity:0}
+    ], {duration: 900 + Math.random() * 500, easing:'cubic-bezier(.2,.8,.3,1)'});
+    anim.onfinish = () => s.remove();
+    document.body.appendChild(s);
+  }
+}
+function rain(n = 26){
+  if(REDUCED_MOTION) return;
+  for(let i = 0; i < n; i++){
+    const s = makeBit();
+    s.style.left = (Math.random() * 100) + 'vw';
+    s.style.top = '-40px';
+    s.style.width = s.style.height = (16 + Math.random() * 14) + 'px';
+    const sway = (Math.random() - .5) * 120;
+    const anim = s.animate([
+      {transform:'translate(0,0) rotate(0deg)', opacity:1},
+      {transform:`translate(${sway}px, ${window.innerHeight + 80}px) rotate(${(Math.random() - .5) * 360}deg)`, opacity:1}
+    ], {duration: 2400 + Math.random() * 1800, delay: Math.random() * 900, easing:'ease-in', fill:'backwards'});
+    anim.onfinish = () => s.remove();
+    document.body.appendChild(s);
+  }
+}
+
+/* ---------- aviso (toast) ---------- */
+let toastTimer = null;
+function showToast(msg, ic){
+  const t = $('toast');
+  t.textContent = msg;
+  if(ic) t.insertAdjacentHTML('afterbegin', icon(ic));
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+/* ---------- top bar: fondo al hacer scroll ---------- */
+(function(){
+  const tb = $('topbar');
+  function onScroll(){
+    if(window.scrollY > 20) tb.classList.add('scrolled');
+    else tb.classList.remove('scrolled');
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  onScroll();
+})();
+
+/* ---------- top bar: botones ---------- */
+$('top-search').addEventListener('click', () => showToast('Búsqueda próximamente...', 'search'));
+$('top-bell').addEventListener('click', () => showToast('No tienes notificaciones nuevas.', 'bell'));
+$('top-avatar').addEventListener('click', () => showToast('Perfil: Gabriel & Lissyanet 💕', 'heart'));
+$('top-avatar').addEventListener('keydown', (e) => {
+  if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); $('top-avatar').click(); }
+});
+
+/* ---------- botones de la portada ---------- */
+$('btn-play').addEventListener('click', () => {
+  $('cartas').scrollIntoView({behavior: REDUCED_MOTION ? 'auto' : 'smooth', block:'start'});
+});
+$('btn-list').addEventListener('click', () => openArchive());
+$('btn-up').addEventListener('click', (e) => {
+  const r = e.currentTarget.getBoundingClientRect();
+  burst(r.left + r.width / 2, r.top + r.height / 2, 16);
+  rain();
+  showToast('¡Me gusta guardado!', 'heart');
+});
+$('btn-down').addEventListener('click', () => showToast('Esa opción no está disponible para esta serie.', 'heart'));
+
+/* ---------- nav superior ---------- */
+document.querySelectorAll('.topnav a').forEach(a => {
+  a.addEventListener('click', () => {
+    document.querySelectorAll('.topnav a').forEach(x => x.classList.remove('active'));
+    a.classList.add('active');
+  });
+});
+
+/* ---------- aparición al hacer scroll ---------- */
+const io = REDUCED_MOTION ? null : new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if(entry.isIntersecting){
+      entry.target.classList.add('in-view');
+      io.unobserve(entry.target);
+    }
+  });
+}, {threshold:.15});
+function registerReveal(el, immediate){
+  if(REDUCED_MOTION || immediate){ el.classList.add('in-view'); return; }
+  io.observe(el);
+}
+document.querySelectorAll('.reveal').forEach(el => registerReveal(el, false));
+
+/* ---------- cartas como tarjetas de episodios (carrusel) ---------- */
+const timelineEl = $('timeline');
+const archiveEl = $('archive');
+const archiveList = $('archive-list');
+let cartaEls = [];
+let disponibles = [];
+let builtOnce = false;
+let currentDayKey = dayKey(new Date());
+const GRADS = [
+  'linear-gradient(160deg,#f6a54b,#e5586a 60%,#3a3f8f)',
+  'linear-gradient(160deg,#ffcf7a,#f58a5b 55%,#6a4c93)',
+  'linear-gradient(160deg,#7fb0e6,#f1c18a 55%,#e98a45)',
+  'linear-gradient(160deg,#4b6cb7,#c06c84 60%,#f8b26a)',
+  'linear-gradient(160deg,#2c456f,#d9715a 65%,#ffc371)'
+];
+
+function buildTimeline(){
+  timelineEl.innerHTML = '';
+  cartaEls = [];
+  const now = new Date();
+  const todas = todasLasCartas()
+    .map(c => ({carta:c, fecha:parseLocalDate(c.fecha)}))
+    .sort((a, b) => a.fecha - b.fecha);
+  todas.forEach((t, i) => { t.n = i + 1; });
+
+  const pasadas = todas.filter(c => now >= c.fecha);
+  const futuras = todas.filter(c => now <  c.fecha);
+  disponibles = pasadas;
+
+  const ventana = [...pasadas.slice(-3), ...futuras.slice(0, 3)];
+
+  ventana.forEach(({carta, fecha, n}, i) => {
+    const unlocked = now >= fecha;
+    const esNueva = unlocked && (now - fecha) / 86400000 < 10;
+
+    const card = document.createElement('button');
+    card.type = 'button';
+    card.className = 'card-ep reveal' + (unlocked ? '' : ' locked');
+    card.style.setProperty('--i', i);
+    card.style.setProperty('--g', GRADS[(n - 1) % GRADS.length]);
+    if(!unlocked) card.setAttribute('aria-disabled', 'true');
+    card.innerHTML = `
+      <div class="card-thumb"><span class="card-play">${icon(unlocked ? 'play' : 'lock')}</span></div>
+      <div class="card-info">
+        <div class="card-num-row">
+          <span class="card-num">Episodio ${n}</span>
+          ${esNueva ? '<span class="tag-new">NUEVA</span>' : ''}
+        </div>
+        <span class="card-title"></span>
+        <span class="card-sub"></span>
+      </div>
+    `;
+    card.querySelector('.card-title').textContent = unlocked ? carta.titulo : 'Carta bloqueada';
+
+    card.addEventListener('click', () => {
+      if(unlocked){
+        const r = card.querySelector('.card-thumb').getBoundingClientRect();
+        burst(r.left + r.width / 2, r.top + r.height / 2, 8);
+        openLetter(disponibles.findIndex(d => d.carta === carta));
+      } else {
+        card.classList.remove('shake'); void card.offsetWidth; card.classList.add('shake');
+        const dias = Math.max(1, Math.ceil((fecha - new Date()) / 86400000));
+        showToast(`Todavía no. Se abre el ${fmtFechaLarga(fecha)} (faltan ${dias} día${dias === 1 ? '' : 's'}).`, 'lock');
+      }
+    });
+
+    timelineEl.appendChild(card);
+    registerReveal(card, builtOnce);
+    cartaEls.push({sub:card.querySelector('.card-sub'), fecha, unlocked});
+  });
+  builtOnce = true;
+  refreshLockStates();
+  renderArchivo();
+}
+
+function refreshLockStates(){
+  const now = new Date();
+  cartaEls.forEach(ref => {
+    const corta = fmtFechaCorta(ref.fecha);
+    if(ref.unlocked){
+      ref.sub.textContent = corta + ' · toca para abrir';
+    } else {
+      const remDays = Math.max(0, Math.ceil((ref.fecha - now) / 86400000));
+      ref.sub.textContent = corta + ' · ' + (remDays <= 0 ? 'se abre hoy' : `se abre en ${remDays} día${remDays === 1 ? '' : 's'}`);
+    }
+  });
+}
+
+/* ---------- flechas del carrusel ---------- */
+document.querySelectorAll('.row-arrow').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const dir = btn.classList.contains('next') ? 1 : -1;
+    const card = timelineEl.querySelector('.card-ep');
+    const amount = card ? (card.offsetWidth + 10) * 2 * dir : 400 * dir;
+    timelineEl.scrollBy({left: amount, behavior: REDUCED_MOTION ? 'auto' : 'smooth'});
+  });
+});
+
+/* ---------- contador principal + cuenta especial ---------- */
+const counterEls = {days:$('c-days'), hours:$('c-hours'), mins:$('c-mins'), secs:$('c-secs')};
+const prevCounter = {days:null, hours:null, mins:null, secs:null};
+let lastSeason = null;
+function pulseIfChanged(el, key, val){
+  if(prevCounter[key] !== val){
+    prevCounter[key] = val;
+    if(!REDUCED_MOTION){
+      el.classList.remove('tick');
+      void el.offsetWidth;
+      el.classList.add('tick');
+    }
+  }
+}
+function mesesJuntos(now){
+  let m = (now.getFullYear() - START_DATE.getFullYear()) * 12 + (now.getMonth() - START_DATE.getMonth());
+  let ancla = new Date(START_DATE.getFullYear(), START_DATE.getMonth() + m, START_DATE.getDate());
+  if(ancla > now){
+    m--;
+    ancla = new Date(START_DATE.getFullYear(), START_DATE.getMonth() + m, START_DATE.getDate());
+  }
+  return {m, d: Math.floor((now - ancla) / 86400000)};
+}
+
+function tickCounters(){
+  const now = new Date();
+
+  const k = dayKey(now);
+  if(k !== currentDayKey){
+    currentDayKey = k;
+    buildTimeline();
+  }
+
+  const diff = now - START_DATE;
+  const days = Math.floor(diff / 86400000);
+  const hours = Math.floor((diff % 86400000) / 3600000);
+  const mins = Math.floor((diff % 3600000) / 60000);
+  const secs = Math.floor((diff % 60000) / 1000);
+  counterEls.days.textContent = days;
+  counterEls.hours.textContent = pad(hours);
+  counterEls.mins.textContent = pad(mins);
+  counterEls.secs.textContent = pad(secs);
+  pulseIfChanged(counterEls.days, 'days', days);
+  pulseIfChanged(counterEls.hours, 'hours', hours);
+  pulseIfChanged(counterEls.mins, 'mins', mins);
+  pulseIfChanged(counterEls.secs, 'secs', secs);
+
+  const mj = mesesJuntos(now);
+  $('meses').textContent = `${mj.m} ${mj.m === 1 ? 'mes' : 'meses'} y ${mj.d} ${mj.d === 1 ? 'día' : 'días'} juntos`;
+
+  const season = Math.floor(mj.m / 12) + 1;
+  if(season !== lastSeason){
+    lastSeason = season;
+    document.querySelectorAll('.season-n').forEach(el => { el.textContent = season; });
+  }
+
+  const remainDays = Math.max(0, Math.ceil((SPECIAL_DATE - now) / 86400000));
+  if(now >= SPECIAL_DATE){
+    $('sn-count').innerHTML = '¡Ya llegó el día! ' + icon('sparkle');
+  } else {
+    $('special-days').textContent = remainDays;
+  }
+
+  refreshLockStates();
+}
+
+/* ---------- modal de carta ---------- */
+const modal = $('modal');
+let lastFocused = null;
+let currentIdx = -1;
+
+function showLetter(idx){
+  const item = disponibles[idx];
+  if(!item) return;
+  currentIdx = idx;
+  $('letter-date').textContent = fmtFechaLarga(item.fecha);
+  $('letter-title').textContent = item.carta.titulo;
+  $('letter-body').textContent = item.carta.contenido;
+  $('letter-scroll').scrollTop = 0;
+
+  $('letter-nav').hidden = disponibles.length <= 1;
+  $('letter-prev').disabled = idx <= 0;
+  $('letter-next').disabled = idx >= disponibles.length - 1;
+  $('letter-count').textContent = `${idx + 1} de ${disponibles.length}`;
+}
+function openLetter(idx){
+  if(idx < 0) return;
+  lastFocused = document.activeElement;
+  showLetter(idx);
+  modal.classList.add('show');
+  document.documentElement.classList.add('lock');
+  $('letter-close').focus();
+}
+function closeLetter(){
+  modal.classList.remove('show');
+  document.documentElement.classList.remove('lock');
+  if(lastFocused) lastFocused.focus();
+}
+$('letter-close').addEventListener('click', closeLetter);
+modal.addEventListener('click', (e) => { if(e.target === modal) closeLetter(); });
+$('letter-prev').addEventListener('click', () => showLetter(currentIdx - 1));
+$('letter-next').addEventListener('click', () => showLetter(currentIdx + 1));
+
+/* ---------- archivo de cartas ---------- */
+let archiveLastFocused = null;
+
+function renderArchivo(){
+  archiveList.innerHTML = '';
+  $('archive-count').textContent = '(' + disponibles.length + ')';
+  if(disponibles.length === 0){
+    archiveList.innerHTML = '<div class="archive-empty">Todavía no hay cartas disponibles.</div>';
+    return;
+  }
+  [...disponibles].map((d, idx) => ({...d, idx})).reverse().forEach(({carta, fecha, idx}) => {
+    const row = document.createElement('button');
+    row.type = 'button';
+    row.className = 'archive-row';
+    const d = document.createElement('span'); d.className = 'ar-date'; d.textContent = fmtFechaLarga(fecha);
+    const t = document.createElement('span'); t.className = 'ar-title'; t.textContent = carta.titulo;
+    row.append(d, t);
+    row.addEventListener('click', () => { closeArchive(true); openLetter(idx); });
+    archiveList.appendChild(row);
+  });
+}
+function openArchive(){
+  archiveLastFocused = document.activeElement;
+  archiveEl.classList.add('show');
+  document.documentElement.classList.add('lock');
+  $('archive-close').focus();
+}
+function closeArchive(keepLock){
+  archiveEl.classList.remove('show');
+  if(keepLock !== true) document.documentElement.classList.remove('lock');
+  if(keepLock !== true && archiveLastFocused) archiveLastFocused.focus();
+}
+$('archive-open').addEventListener('click', openArchive);
+$('archive-close').addEventListener('click', () => closeArchive());
+archiveEl.addEventListener('click', (e) => { if(e.target === archiveEl) closeArchive(); });
+
+/* ---------- teclado: Esc, flechas y foco atrapado ---------- */
+document.addEventListener('keydown', (e) => {
+  const letterOpen = modal.classList.contains('show');
+  const archiveOpen = archiveEl.classList.contains('show');
+  if(!letterOpen && !archiveOpen) return;
+
+  if(e.key === 'Escape'){
+    letterOpen ? closeLetter() : closeArchive();
+    return;
+  }
+  if(letterOpen && e.key === 'ArrowLeft' && currentIdx > 0) showLetter(currentIdx - 1);
+  if(letterOpen && e.key === 'ArrowRight' && currentIdx < disponibles.length - 1) showLetter(currentIdx + 1);
+
+  if(e.key === 'Tab'){
+    const box = letterOpen ? $('letter-wrap') : archiveEl.querySelector('.archive-panel');
+    const f = [...box.querySelectorAll('button:not(:disabled)')].filter(el => el.offsetParent !== null);
+    if(!f.length) return;
+    const first = f[0], last = f[f.length - 1];
+    if(e.shiftKey && document.activeElement === first){ e.preventDefault(); last.focus(); }
+    else if(!e.shiftKey && document.activeElement === last){ e.preventDefault(); first.focus(); }
+    else if(!box.contains(document.activeElement)){ e.preventDefault(); first.focus(); }
+  }
+});
+
+/* ---------- tarjeta del día especial: giro ---------- */
+const flipEl = $('flip'), flipFront = $('flip-front'), flipBack = $('flip-back');
+function setFlip(on){
+  flipEl.classList.toggle('is-flipped', on);
+  flipFront.inert = on;
+  flipBack.inert = !on;
+  flipFront.setAttribute('aria-expanded', on ? 'true' : 'false');
+  flipBack.setAttribute('aria-hidden', on ? 'false' : 'true');
+  if(!REDUCED_MOTION){
+    flipEl.classList.remove('flipping'); void flipEl.offsetWidth; flipEl.classList.add('flipping');
+    const r = flipEl.getBoundingClientRect();
+    burst(r.left + r.width / 2, r.top + r.height / 2, 12);
+  }
+  setTimeout(() => (on ? $('flip-return') : flipFront).focus({preventScroll:true}), REDUCED_MOTION ? 0 : 500);
+}
+flipFront.addEventListener('click', () => setFlip(true));
+$('flip-return').addEventListener('click', () => setFlip(false));
+
+/* ---------- arranque ---------- */
+buildTimeline();
+setInterval(tickCounters, 1000);
+tickCounters();
+</script>
+</body>
+</html>
